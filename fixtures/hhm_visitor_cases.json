@@ -1,6 +1,6 @@
 {
   "contract": "hhm.visitor-qr.v1",
-  "audience": "hhm-api",
+  "audience": "hhm-visitor-access",
   "presentation_prefix": "hhm-visitor:",
   "issued_at_epoch": 1787572810,
   "grace_seconds": 15,

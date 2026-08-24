@@ -9,7 +9,7 @@ from typing import Final
 
 
 QR_SCHEMA: Final = "hhm.visitor-qr.v1"
-QR_AUDIENCE: Final = "hhm-api"
+QR_AUDIENCE: Final = "hhm-visitor-access"
 QR_PREFIX: Final = "hhm1"
 PRESENTATION_PREFIX: Final = "hhm-visitor:"
 SIGNATURE_CONTEXT: Final = b"hhm.visitor-qr.signature.v1\0"

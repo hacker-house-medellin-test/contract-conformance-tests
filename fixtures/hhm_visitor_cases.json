@@ -1,0 +1,26 @@
+{
+  "contract": "hhm.visitor-qr.v1",
+  "audience": "hhm-api",
+  "presentation_prefix": "hhm-visitor:",
+  "issued_at_epoch": 1787572810,
+  "grace_seconds": 15,
+  "maximum_redemptions_per_code": 128,
+  "allowed_doors": [
+    "front-door",
+    "garden-door"
+  ],
+  "valid_actions": [
+    "check_in",
+    "check_out"
+  ],
+  "wrong_bindings": [
+    {
+      "expected_door": "garden-door",
+      "expected_action": "check_in"
+    },
+    {
+      "expected_door": "front-door",
+      "expected_action": "check_out"
+    }
+  ]
+}

@@ -20,8 +20,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Check out the sibling test suite
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
+      - name: Check out the exact HHM interface head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: hacker-house-medellin/hhm-interfaces
+          ref: 12dfcdf8cf923d1454b07c55504438d9c8374dda
+          path: .contract-cache/hhm-interfaces
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
@@ -35,4 +43,5 @@ jobs:
         env:
           PYTHONPATH: src
           DEEP_TEST_SEEDS: '0-49'
+          HHM_INTERFACES_DIR: .contract-cache/hhm-interfaces
         run: python -m unittest discover -s tests -v

@@ -1,0 +1,48 @@
+name: one-shot format exact ORES contract config scanner
+
+on:
+  push:
+    branches:
+      - den-3828-ores-cli-contract-config-canary-20260911
+    paths:
+      - '.github/workflows/one-shot-format-ores-contract-config.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out formatter branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: den-3828-ores-cli-contract-config-canary-20260911
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Install exact Rust formatter
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: '1.95.0'
+          components: rustfmt
+
+      - name: Format exact hash-bound scanner and publish temporary bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=canaries/ores-contract-config
+          mkdir -p "$root/formatted"
+          cat \
+            "$root/exact-source/contract_config_peers.part1.rs" \
+            "$root/exact-source/contract_config_peers.part2.rs" \
+            "$root/exact-source/contract_config_peers.part3.rs" \
+            > "$root/formatted/contract_config_peers.rs"
+          test "$(git hash-object "$root/formatted/contract_config_peers.rs")" = '34a1e15e7245e7a11e67c367bc472a45b2497f01'
+          rustfmt +1.95.0 --edition 2024 "$root/formatted/contract_config_peers.rs"
+          git config user.name 'ores-format-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$root/formatted/contract_config_peers.rs"
+          git commit -m 'style(DEN-3828): capture exact Rust 1.95 scanner formatting'
+          git push origin HEAD:den-3828-ores-cli-contract-config-canary-20260911

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'contracts/platform/**'
+      - 'canaries/ores-contract-config/**'
       - '.github/workflows/ores-cli-contract-config-canary.yml'
   workflow_dispatch:
 
@@ -27,17 +28,18 @@ jobs:
           EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
-      - name: Check out exact ORES candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: ORESoftware/ores-cli
-          ref: 15ed5ed2626929959157328e3e84634ebd7755ae
-          path: .ores-cli
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Verify exact ORES candidate revision
-        run: test "$(git -C .ores-cli rev-parse HEAD)" = "15ed5ed2626929959157328e3e84634ebd7755ae"
+      - name: Reconstruct and bind exact ORES scanner source
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=canaries/ores-contract-config
+          mkdir -p "$root/src/audit"
+          cat \
+            "$root/exact-source/contract_config_peers.part1.rs" \
+            "$root/exact-source/contract_config_peers.part2.rs" \
+            "$root/exact-source/contract_config_peers.part3.rs" \
+            > "$root/src/audit/contract_config_peers.rs"
+          test "$(git hash-object "$root/src/audit/contract_config_peers.rs")" = '34a1e15e7245e7a11e67c367bc472a45b2497f01'
 
       - name: Install exact ORES Rust toolchain
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
@@ -45,19 +47,24 @@ jobs:
           toolchain: '1.95.0'
           components: rustfmt, clippy
 
-      - name: Enforce ORES format, compile, and focused unit regressions
-        working-directory: .ores-cli
+      - name: Generate isolated harness lockfile
+        working-directory: canaries/ores-contract-config
+        run: cargo +1.95.0 generate-lockfile
+
+      - name: Enforce exact scanner format, compile, tests, and Clippy
+        working-directory: canaries/ores-contract-config
         run: |
           set -euo pipefail
           cargo +1.95.0 fmt --all -- --check
           cargo +1.95.0 check --locked --all-targets
-          cargo +1.95.0 test --locked --lib contract_config_peers -- --nocapture
+          cargo +1.95.0 test --locked --lib -- --nocapture
           cargo +1.95.0 clippy --locked --all-targets -- -D warnings
 
-      - name: Execute ORES scanner against real HHM test-org checkout
+      - name: Execute exact ORES scanner against real HHM test-org checkout
+        working-directory: canaries/ores-contract-config
         env:
           ORES_CLI_TEST_CONTRACT_CONFIG_REPO: ${{ github.workspace }}
-        run: cargo +1.95.0 test --locked --manifest-path .ores-cli/Cargo.toml --test contract_config_external -- --nocapture
+        run: cargo +1.95.0 test --locked --test external_hhm -- --nocapture
 
       - name: Set up tested Node runtime
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020

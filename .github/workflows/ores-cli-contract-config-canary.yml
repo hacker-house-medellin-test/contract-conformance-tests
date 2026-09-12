@@ -39,7 +39,7 @@ jobs:
             "$root/exact-source/contract_config_peers.part2.rs" \
             "$root/exact-source/contract_config_peers.part3.rs" \
             > "$root/src/audit/contract_config_peers.rs"
-          test "$(git hash-object "$root/src/audit/contract_config_peers.rs")" = '34a1e15e7245e7a11e67c367bc472a45b2497f01'
+          test "$(git hash-object "$root/src/audit/contract_config_peers.rs")" = 'ecc702f1b09a17957a7092fd05e554cc72fced1f'
 
       - name: Install exact ORES Rust toolchain
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30

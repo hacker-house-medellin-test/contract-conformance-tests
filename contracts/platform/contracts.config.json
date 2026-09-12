@@ -1,0 +1,6 @@
+{
+  "typespec": "typespec/main.tsp",
+  "jsonSchema": "json-schema/contract.schema.json",
+  "out": "../../generated/platform",
+  "target": "../../target/platform"
+}

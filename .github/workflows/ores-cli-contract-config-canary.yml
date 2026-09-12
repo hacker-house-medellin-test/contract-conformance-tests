@@ -1,0 +1,141 @@
+name: ORES config peer authority canary
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/platform/**'
+      - '.github/workflows/ores-cli-contract-config-canary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Check out exact HHM test head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Verify exact HHM test revision
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Check out exact ORES candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: ORESoftware/ores-cli
+          ref: 15ed5ed2626929959157328e3e84634ebd7755ae
+          path: .ores-cli
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Verify exact ORES candidate revision
+        run: test "$(git -C .ores-cli rev-parse HEAD)" = "15ed5ed2626929959157328e3e84634ebd7755ae"
+
+      - name: Install exact ORES Rust toolchain
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: '1.95.0'
+          components: rustfmt, clippy
+
+      - name: Enforce ORES format, compile, and focused unit regressions
+        working-directory: .ores-cli
+        run: |
+          set -euo pipefail
+          cargo +1.95.0 fmt --all -- --check
+          cargo +1.95.0 check --locked --all-targets
+          cargo +1.95.0 test --locked --lib contract_config_peers -- --nocapture
+          cargo +1.95.0 clippy --locked --all-targets -- -D warnings
+
+      - name: Execute ORES scanner against real HHM test-org checkout
+        env:
+          ORES_CLI_TEST_CONTRACT_CONFIG_REPO: ${{ github.workspace }}
+        run: cargo +1.95.0 test --locked --manifest-path .ores-cli/Cargo.toml --test contract_config_external -- --nocapture
+
+      - name: Set up tested Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.16.0
+
+      - name: Transpile TypeSpec and compare independent JSON Schema authority
+        uses: ORESoftware/typespec-json-schema-validator@07688e1eea92a666f7e8647038c9f2c1544440ed
+        with:
+          typespec: contracts/platform/typespec/main.tsp
+          schema: contracts/platform/json-schema/contract.schema.json
+          report: .typespec-json-schema-validator/hhm/report.json
+          sarif: .typespec-json-schema-validator/hhm/report.sarif
+          contract_ir: .typespec-json-schema-validator/hhm/contract-ir.json
+          output_dir: .typespec-json-schema-validator/hhm/generated
+          max_probes: '64'
+
+      - name: Require current TJSV evidence for both authored authorities
+        uses: ORESoftware/typespec-json-schema-validator/actions/test-consumer-admission@07688e1eea92a666f7e8647038c9f2c1544440ed
+        with:
+          contract_ir: .typespec-json-schema-validator/hhm/contract-ir.json
+          report: .typespec-json-schema-validator/hhm/report.json
+          typespec: contracts/platform/typespec/main.tsp
+          schema: contracts/platform/json-schema/contract.schema.json
+          generated_schema: .typespec-json-schema-validator/hhm/generated/typespec.generated.schema.json
+
+      - name: Prepare TypeSpec-only drift copy
+        run: |
+          set -euo pipefail
+          mkdir -p .typespec-json-schema-validator/typespec-drift/source
+          sed 's/enabled: boolean;/enabled: string;/' contracts/platform/typespec/main.tsp > .typespec-json-schema-validator/typespec-drift/source/main.tsp
+
+      - name: TypeSpec-only drift must fail parity
+        id: typespec_drift
+        continue-on-error: true
+        uses: ORESoftware/typespec-json-schema-validator@07688e1eea92a666f7e8647038c9f2c1544440ed
+        with:
+          typespec: .typespec-json-schema-validator/typespec-drift/source/main.tsp
+          schema: contracts/platform/json-schema/contract.schema.json
+          report: .typespec-json-schema-validator/typespec-drift/report.json
+          contract_ir: .typespec-json-schema-validator/typespec-drift/contract-ir.json
+          output_dir: .typespec-json-schema-validator/typespec-drift/generated
+          max_probes: '64'
+
+      - name: Assert TypeSpec-only drift was rejected
+        env:
+          OUTCOME: ${{ steps.typespec_drift.outcome }}
+        run: test "$OUTCOME" = failure
+
+      - name: Prepare JSON-Schema-only drift copy
+        run: |
+          set -euo pipefail
+          mkdir -p .typespec-json-schema-validator/json-drift/source
+          cp contracts/platform/json-schema/contract.schema.json .typespec-json-schema-validator/json-drift/source/contract.schema.json
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const path = '.typespec-json-schema-validator/json-drift/source/contract.schema.json';
+          const schema = JSON.parse(await readFile(path, 'utf8'));
+          schema.$defs.ReservationContract.properties.enabled.type = 'string';
+          await writeFile(path, `${JSON.stringify(schema, null, 2)}\n`);
+          NODE
+
+      - name: JSON-Schema-only drift must fail parity
+        id: json_schema_drift
+        continue-on-error: true
+        uses: ORESoftware/typespec-json-schema-validator@07688e1eea92a666f7e8647038c9f2c1544440ed
+        with:
+          typespec: contracts/platform/typespec/main.tsp
+          schema: .typespec-json-schema-validator/json-drift/source/contract.schema.json
+          report: .typespec-json-schema-validator/json-drift/report.json
+          contract_ir: .typespec-json-schema-validator/json-drift/contract-ir.json
+          output_dir: .typespec-json-schema-validator/json-drift/generated
+          max_probes: '64'
+
+      - name: Assert JSON-Schema-only drift was rejected
+        env:
+          OUTCOME: ${{ steps.json_schema_drift.outcome }}
+        run: test "$OUTCOME" = failure
+
+      - name: Prove authored authorities remained immutable
+        run: git diff --exit-code -- contracts/platform

@@ -24,7 +24,9 @@ fn resolve_authority_path(
 ) -> Option<PathBuf> {
     let path = Path::new(relative);
     if path.is_absolute()
-        || path.components().any(|component| !matches!(component, Component::Normal(_)))
+        || path
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
     {
         report.push(
             Finding::error(
@@ -100,7 +102,12 @@ fn audit_typespec(root: &Path, path: &Path, report: &mut CommandReport) {
         );
         return;
     }
-    audit_conflict_markers(&text, "contract-config-typespec-conflict-marker", &target, report);
+    audit_conflict_markers(
+        &text,
+        "contract-config-typespec-conflict-marker",
+        &target,
+        report,
+    );
 }
 
 fn audit_json_schema(root: &Path, path: &Path, report: &mut CommandReport) {

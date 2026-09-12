@@ -1,0 +1,54 @@
+name: ORES config peer current-main composition
+
+on:
+  pull_request:
+    paths:
+      - 'canaries/ores-contract-config/product-lock.json'
+      - 'canaries/ores-contract-config/product-audit-mod.rs'
+      - '.github/workflows/ores-cli-contract-config-composition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact certificate head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Bind exact ORES current-main composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=canaries/ores-contract-config
+          test "$(git hash-object "$root/product-audit-mod.rs")" = 'd5245250e3909e22e058525b64fee45691aeba6a'
+          jq -e '
+            .repository == "ORESoftware/ores-cli" and
+            .pullRequest == 258 and
+            .commit == "068fe81278334aa6f4a2eee25d1894ff62c1ec95" and
+            .files["src/audit/contract_config_peers.rs"] == "ecc702f1b09a17957a7092fd05e554cc72fced1f" and
+            .files["src/audit/mod.rs"] == "d5245250e3909e22e058525b64fee45691aeba6a" and
+            .files["tests/contract_config_external.rs"] == "a048e4dc19c7a5562a4236f3a03bc2cc76916fd9" and
+            .authorityModel.typespec == "independently-authored-first-class" and
+            .authorityModel.jsonSchema == "independently-authored-first-class" and
+            .authorityModel.typespecProjection == "generated-json-schema-b" and
+            .authorityModel.generatedJsonSchema == "comparison-evidence-only" and
+            .authorityModel.comparison == "generated-b-vs-authored-a" and
+            .authorityModel.precedence == "none"
+          ' "$root/product-lock.json"
+          grep -Fqx 'mod contract_config_peers;' "$root/product-audit-mod.rs"
+          grep -Fqx 'mod split_peer_contracts;' "$root/product-audit-mod.rs"
+          grep -Fq 'split_peer_contracts::augment_split_peer_contract_audit(options, report)' "$root/product-audit-mod.rs"
+          grep -Fq 'contract_config_peers::augment_contract_config_peer_audit(options, report)' "$root/product-audit-mod.rs"
+          grep -Fq 'peer_authority_identity::augment_peer_authority_identity_audit(options, report)' "$root/product-audit-mod.rs"
+          grep -Fq 'tjsv_full_check::augment_tjsv_full_check_audit(options, report)' "$root/product-audit-mod.rs"
+          grep -Fq 'tjsv_invocation_scope::augment_tjsv_invocation_scope_audit(options, report)' "$root/product-audit-mod.rs"
+          grep -Fq 'workflow_tjsv_inputs::augment_workflow_tjsv_input_audit(options, report)' "$root/product-audit-mod.rs"
+          grep -Fq 'workflow_tjsv_step_pairing::augment_workflow_tjsv_step_pairing_audit(options, report)' "$root/product-audit-mod.rs"

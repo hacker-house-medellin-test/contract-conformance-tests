@@ -6,6 +6,7 @@ __pycache__/
 .coverage
 htmlcov/
 .venv/
+.contract-cache/
 
 # >>> ores fleet hygiene — managed block, edits below are overwritten >>>
 tmp/temp/

@@ -1,0 +1,38 @@
+{
+  "schema": "hhm-test.resident-operations-targets/v1",
+  "hackerHouseMedellinInterfaces": {
+    "repository": "hacker-house-medellin/hhm-interfaces",
+    "commit": "12dfcdf8cf923d1454b07c55504438d9c8374dda"
+  },
+  "hhausInterfaces": {
+    "repository": "hhaus-org/hhaus-interfaces",
+    "commit": "ff125647afff544b768537ff135ad7892c26d1df"
+  },
+  "validator": {
+    "repository": "ORESoftware/typespec-json-schema-validator",
+    "commit": "282883afc4645f3303ed746bdb1e1571475724c5"
+  },
+  "expectedGlobalContractLock": {
+    "source": {
+      "repository": "hacker-house-medellin/hhm-interfaces",
+      "commit": "12dfcdf8cf923d1454b07c55504438d9c8374dda",
+      "typespecSha256": "ef9214e89f78bd9e1196da7c83f5a701351a8221a8e93fd0b3289048fda75e51",
+      "jsonSchemaSha256": "bc6f0bdedc6a1417e7860456242f474c1d4067a054b3d910555b018e3eea9a7e",
+      "minimumFiles": 16,
+      "requiredDeclarations": [
+        "AgreementAcceptance",
+        "AssignmentRequest",
+        "CommunityPoll",
+        "GuestVisit",
+        "PaymentRecord",
+        "PersistenceReceipt",
+        "RentInvoice",
+        "ResourceReservation"
+      ]
+    },
+    "validator": {
+      "repository": "ORESoftware/typespec-json-schema-validator",
+      "commit": "282883afc4645f3303ed746bdb1e1571475724c5"
+    }
+  }
+}

@@ -59,9 +59,12 @@ mod tests {
             report.metadata.get("contractConfigValidPeerPairCount"),
             Some(&JsonValue::from(1))
         );
-        assert!(report.findings.iter().any(|finding| {
-            finding.code == "contract-config-peer-authorities-inspected"
-        }));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| { finding.code == "contract-config-peer-authorities-inspected" })
+        );
     }
 
     #[test]
@@ -74,10 +77,12 @@ mod tests {
             )
             .expect("contract config");
         });
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "contract-config-peer-field-missing"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "contract-config-peer-field-missing")
+        );
     }
 
     #[test]
@@ -97,10 +102,12 @@ mod tests {
             )
             .expect("contract config");
         });
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "contract-config-generated-authority"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "contract-config-generated-authority")
+        );
     }
 
     #[test]
@@ -113,10 +120,12 @@ mod tests {
             )
             .expect("contract config");
         });
-        assert!(alias
-            .findings
-            .iter()
-            .any(|finding| finding.code == "contract-config-peer-path-alias"));
+        assert!(
+            alias
+                .findings
+                .iter()
+                .any(|finding| finding.code == "contract-config-peer-path-alias")
+        );
 
         let traversal = audit(|root| {
             write_hhm_layout(root);
@@ -126,10 +135,12 @@ mod tests {
             )
             .expect("contract config");
         });
-        assert!(traversal
-            .findings
-            .iter()
-            .any(|finding| finding.code == "contract-config-authority-path-unsafe"));
+        assert!(
+            traversal
+                .findings
+                .iter()
+                .any(|finding| finding.code == "contract-config-authority-path-unsafe")
+        );
     }
 
     #[test]
@@ -142,10 +153,12 @@ mod tests {
             )
             .expect("JSON Schema authority");
         });
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "contract-config-json-schema-draft"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "contract-config-json-schema-draft")
+        );
     }
 
     #[cfg(unix)]
@@ -162,9 +175,11 @@ mod tests {
             fs::write(outside.join("main.tsp"), "model Packet {}\n").expect("TypeSpec");
             symlink(&outside, home.join("typespec")).expect("symlink TypeSpec directory");
         });
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "contract-config-authority-symlink"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "contract-config-authority-symlink")
+        );
     }
 }

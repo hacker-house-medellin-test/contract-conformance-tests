@@ -38,7 +38,7 @@ jobs:
           set -euo pipefail
           root=canaries/ores-authority-write-283
           test "$(git hash-object "$root/src/audit/authority_write_protection.rs")" = \
-            ba77043c08b0f37bee5c0630be12e71c5b77a18f
+            5dc91c0333fe99927e56c302bcb2bcc3ddcee03e
 
       - name: Install exact product Rust toolchain
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
@@ -160,4 +160,4 @@ jobs:
             canaries/ores-authority-write-283/src/lib.rs \
             canaries/ores-authority-write-283/tests
           test "$(git hash-object canaries/ores-authority-write-283/src/audit/authority_write_protection.rs)" = \
-            ba77043c08b0f37bee5c0630be12e71c5b77a18f
+            5dc91c0333fe99927e56c302bcb2bcc3ddcee03e

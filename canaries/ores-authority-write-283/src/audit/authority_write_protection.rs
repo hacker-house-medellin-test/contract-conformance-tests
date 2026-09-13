@@ -127,7 +127,9 @@ fn insert_authority(
             report.push(
                 Finding::error(
                     "peer-authority-write-authority-limit",
-                    format!("more than {MAX_AUTHORITIES} authored contract sources were discovered"),
+                    format!(
+                        "more than {MAX_AUTHORITIES} authored contract sources were discovered"
+                    ),
                 )
                 .with_target("contracts"),
             );
@@ -222,7 +224,9 @@ fn automation_sources(root: &Path, report: &mut CommandReport) -> Vec<PathBuf> {
                     report.push(
                         Finding::error(
                             "peer-authority-write-file-limit",
-                            format!("more than {MAX_FILES} automation source files were discovered"),
+                            format!(
+                                "more than {MAX_FILES} automation source files were discovered"
+                            ),
                         )
                         .with_target(relative_root),
                     );
@@ -407,13 +411,19 @@ fn canonical_unknown_directory_transfer_is_risky(
     sources: &[String],
     destination: &str,
 ) -> bool {
-    if command == "mv" && sources.iter().any(|source| canonical_authority_literal(source)) {
+    if command == "mv"
+        && sources
+            .iter()
+            .any(|source| canonical_authority_literal(source))
+    {
         return true;
     }
     if !destination_is_directory_like(destination) {
         return false;
     }
-    sources.iter().any(|source| canonical_authority_literal(source))
+    sources
+        .iter()
+        .any(|source| canonical_authority_literal(source))
 }
 
 fn directory_transfer_hits_authority(
@@ -427,7 +437,9 @@ fn directory_transfer_hits_authority(
     if name.is_empty() {
         return false;
     }
-    let directory = normalize_candidate(directory).trim_end_matches('/').to_owned();
+    let directory = normalize_candidate(directory)
+        .trim_end_matches('/')
+        .to_owned();
     if directory.starts_with('$') || directory.contains("${{") {
         return false;
     }
@@ -678,10 +690,12 @@ mod tests {
             "scripts/generate.sh",
             "cp generated/schema.json contracts/account/authored.schema.json\n",
         );
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "peer-authority-direct-write"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "peer-authority-direct-write")
+        );
     }
 
     #[test]
@@ -691,10 +705,12 @@ mod tests {
             ".github/workflows/ci.yml",
             "run: cat generated.tsp > contracts/account/main.tsp\n",
         );
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "peer-authority-direct-write"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "peer-authority-direct-write")
+        );
     }
 
     #[test]
@@ -705,10 +721,12 @@ mod tests {
             "Path('contracts/account/main.tsp').write_text(body)\n",
         ] {
             let report = audit(&pair(), "tools/generate.py", source);
-            assert!(report
-                .findings
-                .iter()
-                .any(|finding| finding.code == "peer-authority-direct-write"));
+            assert!(
+                report
+                    .findings
+                    .iter()
+                    .any(|finding| finding.code == "peer-authority-direct-write")
+            );
         }
     }
 
@@ -736,10 +754,12 @@ mod tests {
             "scripts/generate.sh",
             "tool --input generated/schema.json --output=contracts/account/authored.schema.json\n",
         );
-        assert!(rejected
-            .findings
-            .iter()
-            .any(|finding| finding.code == "peer-authority-direct-write"));
+        assert!(
+            rejected
+                .findings
+                .iter()
+                .any(|finding| finding.code == "peer-authority-direct-write")
+        );
     }
 
     #[test]
@@ -756,10 +776,12 @@ mod tests {
             "scripts/generate.sh",
             "cat generated.tsp > contracts/account/main.tsp\n",
         );
-        assert!(rejected
-            .findings
-            .iter()
-            .any(|finding| finding.code == "peer-authority-direct-write"));
+        assert!(
+            rejected
+                .findings
+                .iter()
+                .any(|finding| finding.code == "peer-authority-direct-write")
+        );
     }
 
     #[test]
@@ -848,10 +870,12 @@ mod tests {
             "tools/write.mjs",
             "writeFileSync('contracts/account/schema/account.json', body);\n",
         );
-        assert!(report
-            .findings
-            .iter()
-            .any(|finding| finding.code == "peer-authority-direct-write"));
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|finding| finding.code == "peer-authority-direct-write")
+        );
     }
 
     #[test]

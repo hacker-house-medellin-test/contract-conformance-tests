@@ -32,15 +32,11 @@ jobs:
           EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
-      - name: Fetch and bind exact ORES PR 283 module
+      - name: Verify vendored exact ORES PR 283 module
         shell: bash
         run: |
           set -euo pipefail
           root=canaries/ores-authority-write-283
-          product=fdab96526e954a370cc65174ae685c572265337c
-          curl --fail --location --proto '=https' --tlsv1.2 \
-            "https://raw.githubusercontent.com/ORESoftware/ores-cli/$product/src/audit/authority_write_protection.rs" \
-            --output "$root/src/audit/authority_write_protection.rs"
           test "$(git hash-object "$root/src/audit/authority_write_protection.rs")" = \
             ba77043c08b0f37bee5c0630be12e71c5b77a18f
 
@@ -160,6 +156,7 @@ jobs:
           git diff --exit-code -- contracts/platform canaries/ores-authority-write-283/Cargo.toml \
             canaries/ores-authority-write-283/src/model.rs \
             canaries/ores-authority-write-283/src/audit/mod.rs \
+            canaries/ores-authority-write-283/src/audit/authority_write_protection.rs \
             canaries/ores-authority-write-283/src/lib.rs \
             canaries/ores-authority-write-283/tests
           test "$(git hash-object canaries/ores-authority-write-283/src/audit/authority_write_protection.rs)" = \

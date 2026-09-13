@@ -431,7 +431,8 @@ fn directory_transfer_hits_authority(
     directory: &str,
     authorities: &BTreeSet<String>,
 ) -> bool {
-    let Some(name) = normalize_candidate(source).rsplit('/').next() else {
+    let normalized_source = normalize_candidate(source);
+    let Some(name) = normalized_source.rsplit('/').next() else {
         return false;
     };
     if name.is_empty() {

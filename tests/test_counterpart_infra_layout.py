@@ -1,4 +1,5 @@
 import pathlib
+import re
 import subprocess
 import tempfile
 import tomllib
@@ -51,8 +52,8 @@ class CounterpartInfraLayoutTests(unittest.TestCase):
             self.assertTrue(main_tf.is_file(), main_tf)
             text = main_tf.read_text()
             self.assertIn('backend "s3" {}', text)
-            self.assertIn('source = "../../modules/cloudflare/terraform/worker-shell"', text)
-            self.assertIn(f'environment = "{environment}"', text)
+            self.assertRegex(text, r'source\s*=\s*"\.\./\.\./modules/cloudflare/terraform/worker-shell"')
+            self.assertRegex(text, rf'environment\s*=\s*"{re.escape(environment)}"')
             run("terraform", "fmt", "-check", "-recursive", ".", cwd=env_root)
             run("terraform", "init", "-backend=false", "-input=false", cwd=env_root)
             run("terraform", "validate", "-no-color", cwd=env_root)
